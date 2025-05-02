@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { UrlService } from './url.service';
 import { CreateUrlDto } from './dto/create-url.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -27,5 +27,25 @@ export class UrlController {
   })
   encode(@Body() body: CreateUrlDto) {
     return this.urlService.encodeLongUrl(body.url);
+  }
+
+  @Get('/decode/:code')
+  @ApiOperation({ summary: 'Decode a shortened URL' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the original URL for the given short code',
+    schema: {
+      example: {
+        success: true,
+        statusCode: 200,
+        message: 'Success',
+        data: {
+          originalUrl: 'https://indicina.co/',
+        },
+      },
+    },
+  })
+  decode(@Param('code') code: string) {
+    return this.urlService.decodeShortUrl(code);
   }
 }

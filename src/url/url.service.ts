@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { ShortenedURL, UrlStore } from '../common/storage/url.store';
 import { Status } from '../common/enums/enums';
-import { EncodeUrlResponse } from '../common/interface/interface';
+import {
+  DecodeUrlResponse,
+  EncodeUrlResponse,
+} from '../common/interface/interface';
 
 @Injectable()
 export class UrlService {
@@ -49,5 +52,26 @@ export class UrlService {
       shortUrl: `${this.domain}/${code}`,
       code,
     };
+  }
+
+  /**
+   * Decodes a shortened URL into the original long URL.
+   * Retrieves the original URL from UrlStore using the shortcode.
+   * If the shortcode does not exist or the URL is inactive, returns null.
+   *
+   * @param {string} code - The shortcode of the shortened URL.
+   * @returns {DecodeUrlResponse | null} The original long URL or null if the shortcode is invalid.
+   */
+  decodeShortUrl(code: string): DecodeUrlResponse | null {
+    const entry = UrlStore.get(code);
+
+    // If the entry is found and the status is ACTIVE, return the original URL
+    if (entry && entry.status === Status.ACTIVE) {
+      return {
+        originalUrl: entry.originalUrl,
+      };
+    }
+
+    return null;
   }
 }
