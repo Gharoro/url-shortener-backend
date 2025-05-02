@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { Logger } from '@nestjs/common';
+import { Logger, RequestMethod } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -11,7 +11,9 @@ async function bootstrap() {
   app.enableCors();
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
-  app.setGlobalPrefix('/api');
+  app.setGlobalPrefix('/api', {
+    exclude: [{ path: ':url_path', method: RequestMethod.GET }], // this is necessary for the short url redirect to work
+  });
 
   const config = new DocumentBuilder()
     .setTitle('URL Shortener')
