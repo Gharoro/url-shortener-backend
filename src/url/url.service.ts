@@ -74,4 +74,61 @@ export class UrlService {
 
     return null;
   }
+
+  /**
+   * Lists all shortened URLs with optional search and pagination metadata.
+   *
+   * @param {string} [search] - Search term to filter original URLs.
+   * @param {number} [page=1] - Page number.
+   * @param {number} [limit=10] - Items per page.
+   * @returns {{
+   *   urls: ShortenedURL[],
+   *   totalCount: number,
+   *   totalPages: number,
+   *   currentPage: number,
+   *   hasNextPage: boolean,
+   *   hasPreviousPage: boolean
+   * }} Paginated result with metadata.
+   */
+  listAllShortenedUrls(search?: string, page = 1, limit = 10) {
+    let entries = Array.from(UrlStore.values());
+
+    if (search) {
+      const query = search.toLowerCase();
+      entries = entries.filter((entry) =>
+        entry.originalUrl.toLowerCase().includes(query),
+      );
+    }
+
+    const totalCount = entries.length;
+    const totalPages = Math.ceil(totalCount / limit);
+    const currentPage = Math.max(1, Math.min(page, totalPages || 1));
+
+    const start = (currentPage - 1) * limit;
+    const end = start + limit;
+    const paginated = entries.slice(start, end);
+
+    return {
+      urls: paginated,
+      totalCount,
+      totalPages,
+      currentPage,
+      hasNextPage: currentPage < totalPages,
+      hasPreviousPage: currentPage > 1,
+    };
+  }
+
+  /**
+   * Retrieves metadata for a specific shortened URL by shortcode.
+   *
+   * @param {string} code - The short code representing the URL.
+   * @returns {ShortenedURL | null} The stored URL metadata or null if not found.
+   */
+  getUrlStatistics(code: string): ShortenedURL | null {
+    const entry = UrlStore.get(code);
+
+    if (!entry) return null;
+
+    return entry;
+  }
 }
