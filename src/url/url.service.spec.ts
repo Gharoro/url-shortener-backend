@@ -63,4 +63,76 @@ describe('UrlService', () => {
     expect(entry.visitCount).toBe(0);
     expect(typeof entry.id).toBe('string');
   });
+
+  // Encode a URL and verify storage and return structure
+  it('should encode a URL and store the entry in UrlStore', () => {
+    const originalUrl = 'https://indicina.co';
+
+    // Call the encode method
+    const result = service.encodeLongUrl(originalUrl);
+
+    // Check the returned structure has the shortUrl and code properties
+    expect(result).toHaveProperty('shortUrl');
+    expect(result).toHaveProperty('code');
+
+    // Retrieve the entry from the UrlStore using the generated code
+    const entry = UrlStore.get(result.code);
+
+    // Check if the entry exists in UrlStore
+    expect(entry).toBeDefined();
+
+    // If entry is not found, throw an error to make sure it's stored properly
+    if (!entry) throw new Error('Entry was not stored correctly');
+
+    // Check if the stored entry has the expected properties
+    expect(entry.originalUrl).toBe(originalUrl);
+    expect(entry.status).toBe(Status.ACTIVE);
+    expect(entry.visitCount).toBe(0);
+    expect(typeof entry.id).toBe('string');
+  });
+
+  // Decode a valid short code and return the original URL
+  it('should return originalUrl if short code exists and status is ACTIVE', () => {
+    const code = 'GeAi9K';
+    const originalUrl = 'https://indicina.co';
+
+    UrlStore.set(code, {
+      id: 'test-id',
+      shortCode: code,
+      originalUrl,
+      createdAt: new Date(),
+      visitCount: 0,
+      searchCount: 0,
+      status: Status.ACTIVE,
+    });
+
+    const result = service.decodeShortUrl(code);
+
+    expect(result).toEqual({ originalUrl });
+  });
+
+  // Return null if short code does not exist
+  it('should return null if short code is not found', () => {
+    const result = service.decodeShortUrl('nonexistent');
+    expect(result).toBeNull();
+  });
+
+  // Return null if short code exists but status is not ACTIVE
+  it('should return null if short code status is not ACTIVE', () => {
+    const code = 'InactiveCode';
+    const originalUrl = 'https://indicina.co';
+
+    UrlStore.set(code, {
+      id: 'test-id',
+      shortCode: code,
+      originalUrl,
+      createdAt: new Date(),
+      visitCount: 0,
+      searchCount: 0,
+      status: Status.INACTIVE,
+    });
+
+    const result = service.decodeShortUrl(code);
+    expect(result).toBeNull();
+  });
 });

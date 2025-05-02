@@ -9,6 +9,7 @@ describe('UrlController', () => {
 
   const mockUrlService = {
     encodeLongUrl: jest.fn(),
+    decodeShortUrl: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -46,6 +47,24 @@ describe('UrlController', () => {
     const result = controller.encode(dto);
 
     expect(spy).toHaveBeenCalledWith(dto.url);
+    expect(result).toEqual(mockResult);
+  });
+
+  // Test the decode endpoint logic
+  it('should call urlService.decodeShortUrl and return the original URL', () => {
+    const shortCode = 'GeAi9K';
+
+    const mockResult = {
+      originalUrl: 'https://indicina.co',
+    };
+
+    const spy = jest
+      .spyOn(service, 'decodeShortUrl')
+      .mockReturnValue(mockResult);
+
+    const result = controller.decode(shortCode);
+
+    expect(spy).toHaveBeenCalledWith(shortCode);
     expect(result).toEqual(mockResult);
   });
 });
