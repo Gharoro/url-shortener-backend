@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { v4 as uuidv4 } from 'uuid';
 import { UrlService } from './url.service';
 import { ShortenedURL, UrlStore } from '../common/storage/url.store';
 import { Status } from '../common/enums/enums';
@@ -31,7 +32,7 @@ describe('UrlService', () => {
     const code1 = service['generateShortCode']();
 
     const dummyRecord: ShortenedURL = {
-      id: 'test-id',
+      id: uuidv4(),
       shortCode: code1,
       originalUrl: 'https://dummy.com',
       createdAt: new Date(),
@@ -97,7 +98,7 @@ describe('UrlService', () => {
     const originalUrl = 'https://indicina.co';
 
     UrlStore.set(code, {
-      id: 'test-id',
+      id: uuidv4(),
       shortCode: code,
       originalUrl,
       createdAt: new Date(),
@@ -123,7 +124,7 @@ describe('UrlService', () => {
     const originalUrl = 'https://indicina.co';
 
     UrlStore.set(code, {
-      id: 'test-id',
+      id: uuidv4(),
       shortCode: code,
       originalUrl,
       createdAt: new Date(),
@@ -133,6 +134,99 @@ describe('UrlService', () => {
     });
 
     const result = service.decodeShortUrl(code);
+    expect(result).toBeNull();
+  });
+
+  it('should return paginated results without search', () => {
+    // Insert 3 dummy URLs
+    for (let i = 1; i <= 3; i++) {
+      UrlStore.set(`code${i}`, {
+        id: uuidv4(),
+        shortCode: `code${i}`,
+        originalUrl: `https://example${i}.com`,
+        createdAt: new Date(),
+        visitCount: i,
+        searchCount: i,
+        status: Status.ACTIVE,
+      });
+    }
+
+    const result = service.listAllShortenedUrls(undefined, 1, 2);
+
+    expect(result.urls.length).toBe(2);
+    expect(result.totalCount).toBe(3);
+    expect(result.totalPages).toBe(2);
+    expect(result.currentPage).toBe(1);
+    expect(result.hasNextPage).toBe(true);
+    expect(result.hasPreviousPage).toBe(false);
+  });
+
+  it('should return filtered results when search is provided', () => {
+    UrlStore.clear();
+    UrlStore.set('abc123', {
+      id: uuidv4(),
+      shortCode: 'abc123',
+      originalUrl: 'https://indicina.co',
+      createdAt: new Date(),
+      visitCount: 10,
+      searchCount: 5,
+      status: Status.ACTIVE,
+    });
+
+    UrlStore.set('def456', {
+      id: uuidv4(),
+      shortCode: 'def456',
+      originalUrl: 'https://google.com',
+      createdAt: new Date(),
+      visitCount: 8,
+      searchCount: 2,
+      status: Status.ACTIVE,
+    });
+
+    const result = service.listAllShortenedUrls('indicina');
+
+    expect(result.urls.length).toBe(1);
+    expect(result.urls[0].originalUrl).toBe('https://indicina.co');
+    expect(result.totalCount).toBe(1);
+  });
+
+  it('should handle empty UrlStore', () => {
+    UrlStore.clear();
+
+    const result = service.listAllShortenedUrls();
+
+    expect(result.urls).toEqual([]);
+    expect(result.totalCount).toBe(0);
+    expect(result.totalPages).toBe(0);
+    expect(result.currentPage).toBe(1);
+    expect(result.hasNextPage).toBe(false);
+    expect(result.hasPreviousPage).toBe(false);
+  });
+
+  it('should return URL metadata if code exists', () => {
+    const code = 'abc123';
+
+    const entry: ShortenedURL = {
+      id: uuidv4(),
+      shortCode: code,
+      originalUrl: 'https://indicina.co',
+      createdAt: new Date(),
+      visitCount: 5,
+      searchCount: 2,
+      status: Status.ACTIVE,
+    };
+
+    UrlStore.set(code, entry);
+
+    const result = service.getUrlStatistics(code);
+
+    expect(result).toEqual(entry);
+  });
+
+  it('should return null if code does not exist', () => {
+    UrlStore.clear();
+
+    const result = service.getUrlStatistics('nonexistent');
     expect(result).toBeNull();
   });
 });
