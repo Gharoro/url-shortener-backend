@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { UrlService } from './url.service';
 import { CreateUrlDto } from './dto/create-url.dto';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { UpdateUrlDto } from './dto/update-url.dto';
 
 @ApiTags('URL')
 @Controller('url')
@@ -65,7 +66,7 @@ export class UrlController {
         statusCode: 200,
         message: 'Success',
         data: {
-          data: [
+          urls: [
             {
               id: 'uuid',
               shortCode: 'abc123',
@@ -76,11 +77,13 @@ export class UrlController {
               status: 'ACTIVE',
             },
           ],
-          totalCount: 1,
-          totalPages: 1,
-          currentPage: 1,
-          hasNextPage: false,
-          hasPreviousPage: false,
+          pagination: {
+            totalCount: 1,
+            totalPages: 1,
+            currentPage: 1,
+            hasNextPage: false,
+            hasPreviousPage: false,
+          },
         },
       },
     },
@@ -117,5 +120,31 @@ export class UrlController {
   })
   getUrlStatistics(@Param('url_path') code: string) {
     return this.urlService.getUrlStatistics(code);
+  }
+
+  @Put('/status/:code')
+  @ApiOperation({ summary: 'Update URL status' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns updated URL',
+    schema: {
+      example: {
+        success: true,
+        statusCode: 200,
+        message: 'Success',
+        data: {
+          id: 'uuid',
+          shortCode: 'abc123',
+          originalUrl: 'https://indicina.co',
+          createdAt: '2024-01-01T00:00:00Z',
+          visitCount: 5,
+          searchCount: 2,
+          status: 'ACTIVE',
+        },
+      },
+    },
+  })
+  updateUrlStatus(@Body() body: UpdateUrlDto, @Param('code') code: string) {
+    return this.urlService.update(code, body.status);
   }
 }

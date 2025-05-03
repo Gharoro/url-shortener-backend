@@ -154,11 +154,11 @@ describe('UrlService', () => {
     const result = service.listAllShortenedUrls(undefined, 1, 2);
 
     expect(result.urls.length).toBe(2);
-    expect(result.totalCount).toBe(3);
-    expect(result.totalPages).toBe(2);
-    expect(result.currentPage).toBe(1);
-    expect(result.hasNextPage).toBe(true);
-    expect(result.hasPreviousPage).toBe(false);
+    expect(result.pagination.totalCount).toBe(3);
+    expect(result.pagination.totalPages).toBe(2);
+    expect(result.pagination.currentPage).toBe(1);
+    expect(result.pagination.hasNextPage).toBe(true);
+    expect(result.pagination.hasPreviousPage).toBe(false);
   });
 
   it('should return filtered results when search is provided', () => {
@@ -187,7 +187,7 @@ describe('UrlService', () => {
 
     expect(result.urls.length).toBe(1);
     expect(result.urls[0].originalUrl).toBe('https://indicina.co');
-    expect(result.totalCount).toBe(1);
+    expect(result.pagination.totalCount).toBe(1);
   });
 
   it('should handle empty UrlStore', () => {
@@ -196,11 +196,11 @@ describe('UrlService', () => {
     const result = service.listAllShortenedUrls();
 
     expect(result.urls).toEqual([]);
-    expect(result.totalCount).toBe(0);
-    expect(result.totalPages).toBe(0);
-    expect(result.currentPage).toBe(1);
-    expect(result.hasNextPage).toBe(false);
-    expect(result.hasPreviousPage).toBe(false);
+    expect(result.pagination.totalCount).toBe(0);
+    expect(result.pagination.totalPages).toBe(0);
+    expect(result.pagination.currentPage).toBe(1);
+    expect(result.pagination.hasNextPage).toBe(false);
+    expect(result.pagination.hasPreviousPage).toBe(false);
   });
 
   it('should return URL metadata if code exists', () => {
@@ -220,7 +220,10 @@ describe('UrlService', () => {
 
     const result = service.getUrlStatistics(code);
 
-    expect(result).toEqual(entry);
+    expect(result).toEqual({
+      ...entry,
+      visitCount: (entry.visitCount || 0) + 1,
+    });
   });
 
   it('should return null if code does not exist', () => {

@@ -85,11 +85,13 @@ describe('UrlController', () => {
           status: Status.ACTIVE,
         },
       ],
-      totalCount: 1,
-      totalPages: 1,
-      currentPage: 1,
-      hasNextPage: false,
-      hasPreviousPage: false,
+      pagination: {
+        totalCount: 1,
+        totalPages: 1,
+        currentPage: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
     };
 
     const spy = jest
@@ -106,11 +108,13 @@ describe('UrlController', () => {
   it('should return empty data when no URLs are found', () => {
     const mockResult = {
       urls: [],
-      totalCount: 0,
-      totalPages: 0,
-      currentPage: 1,
-      hasNextPage: false,
-      hasPreviousPage: false,
+      pagination: {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
     };
 
     const spy = jest
