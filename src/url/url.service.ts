@@ -83,21 +83,40 @@ export class UrlService {
    * @param {number} [limit=10] - Items per page.
    * @returns {{
    *   urls: ShortenedURL[],
-   *   totalCount: number,
-   *   totalPages: number,
-   *   currentPage: number,
-   *   hasNextPage: boolean,
-   *   hasPreviousPage: boolean
+   *   pagination: {
+   *     totalCount: number,
+   *     totalPages: number,
+   *     currentPage: number,
+   *     hasNextPage: boolean,
+   *     hasPreviousPage: boolean
+   *  }
+ 
    * }} Paginated result with metadata.
    */
   listAllShortenedUrls(search?: string, page = 1, limit = 10) {
     let entries = Array.from(UrlStore.values());
+
+    // Sort by most recently created first
+    entries = entries.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
     if (search) {
       const query = search.toLowerCase();
       entries = entries.filter((entry) =>
         entry.originalUrl.toLowerCase().includes(query),
       );
+
+      // Update searchCount for each matching URL
+      entries.forEach((entry) => {
+        // Find the original entry in the store and update it
+        const storeUrl = UrlStore.get(entry.shortCode);
+        if (storeUrl) {
+          storeUrl.searchCount = (storeUrl.searchCount || 0) + 1;
+          UrlStore.set(entry.shortCode, storeUrl);
+        }
+      });
     }
 
     const totalCount = entries.length;
@@ -110,11 +129,13 @@ export class UrlService {
 
     return {
       urls: paginated,
-      totalCount,
-      totalPages,
-      currentPage,
-      hasNextPage: currentPage < totalPages,
-      hasPreviousPage: currentPage > 1,
+      pagination: {
+        totalCount,
+        totalPages,
+        currentPage,
+        hasNextPage: currentPage < totalPages,
+        hasPreviousPage: currentPage > 1,
+      },
     };
   }
 
@@ -129,6 +150,15 @@ export class UrlService {
 
     if (!entry) return null;
 
-    return entry;
+    // Update visit count
+    UrlStore.set(code, {
+      ...entry,
+      visitCount: (entry.visitCount || 0) + 1,
+    });
+
+    const updatedEntry = UrlStore.get(code);
+    if (!updatedEntry) return null;
+
+    return updatedEntry;
   }
 }

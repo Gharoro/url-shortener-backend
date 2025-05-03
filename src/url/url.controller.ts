@@ -65,7 +65,7 @@ export class UrlController {
         statusCode: 200,
         message: 'Success',
         data: {
-          data: [
+          urls: [
             {
               id: 'uuid',
               shortCode: 'abc123',
@@ -76,11 +76,13 @@ export class UrlController {
               status: 'ACTIVE',
             },
           ],
-          totalCount: 1,
-          totalPages: 1,
-          currentPage: 1,
-          hasNextPage: false,
-          hasPreviousPage: false,
+          pagination: {
+            totalCount: 1,
+            totalPages: 1,
+            currentPage: 1,
+            hasNextPage: false,
+            hasPreviousPage: false,
+          },
         },
       },
     },
