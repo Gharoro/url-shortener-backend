@@ -89,8 +89,7 @@ export class UrlService {
    *     currentPage: number,
    *     hasNextPage: boolean,
    *     hasPreviousPage: boolean
-   *  }
- 
+   *   }
    * }} Paginated result with metadata.
    */
   listAllShortenedUrls(search?: string, page = 1, limit = 10) {
@@ -154,6 +153,31 @@ export class UrlService {
     UrlStore.set(code, {
       ...entry,
       visitCount: (entry.visitCount || 0) + 1,
+    });
+
+    const updatedEntry = UrlStore.get(code);
+    if (!updatedEntry) return null;
+
+    return updatedEntry;
+  }
+
+  /**
+   * Update a URL status.
+   * Returns the updated URL.
+   *
+   * @param {code} code - The URL code to update
+   * @param {Status} status - The new status
+   * @returns {ShortenedURL} The updated shortened URL or null if URL not found
+   */
+  update(code: string, status: Status): ShortenedURL | null {
+    const entry = UrlStore.get(code);
+
+    if (!entry) return null;
+
+    // Update status
+    UrlStore.set(code, {
+      ...entry,
+      status,
     });
 
     const updatedEntry = UrlStore.get(code);
